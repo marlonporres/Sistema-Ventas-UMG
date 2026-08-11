@@ -266,6 +266,6 @@ public class FrmFactura extends javax.swing.JInternalFrame {
         javax.swing.table.DefaultTableModel modelo = (javax.swing.table.DefaultTableModel) tblDetalle.getModel();
         modelo.addRow(fila);
     }
-
+    
 }
 

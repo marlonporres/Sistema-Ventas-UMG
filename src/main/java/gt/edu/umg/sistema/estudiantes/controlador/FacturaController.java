@@ -108,10 +108,18 @@ public class FacturaController {
             return;
         }
 
+        // --- INYECCIÓN DE DIAGNÓSTICO ---
+        System.out.println(">>> 1. Pasó las validaciones iniciales");
         double total = obtenerTotalCalculado();
+        System.out.println(">>> 2. Total calculado: " + total);
 
         // Llamada al DAO de persistencia SQL Server
+        System.out.println(">>> 3. Intentando enviar al DAO...");
         boolean guardado = facturaDAO.guardarFacturaPrueba(nit, cliente, total);
+        
+        System.out.println(">>> 4. Resultado del DAO: " + guardado);
+        // --------------------------------
+
         if (guardado) {
             limpiarFormularioCompleto();
         }
@@ -142,8 +150,16 @@ public class FacturaController {
         for (int i = 0; i < vistaFactura.getTblDetalle().getRowCount(); i++) {
             Object valorCelda = vistaFactura.getTblDetalle().getValueAt(i, 4);
             if (valorCelda != null) {
-                String textoLimpio = valorCelda.toString().replace("Q", "").replace(",", "").trim();
-                totalConIva += Double.parseDouble(textoLimpio);
+                try {
+                    // Limpieza robusta de cadenas monetarias
+                    String textoLimpio = valorCelda.toString()
+                            .replace("Q", "")
+                            .replace(",", "")
+                            .trim();
+                    totalConIva += Double.parseDouble(textoLimpio);
+                } catch (NumberFormatException e) {
+                    System.err.println("Advertencia de formato en fila " + i + ": " + e.getMessage());
+                }
             }
         }
         return totalConIva;

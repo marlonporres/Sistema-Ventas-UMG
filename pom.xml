@@ -8,15 +8,15 @@
     
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>26</maven.compiler.release>
+        <maven.compiler.release>25</maven.compiler.release>
         <exec.mainClass>gt.edu.umg.sistema.estudiantes.SistemaEstudiantes</exec.mainClass>
     </properties>
 
-    <dependencies>
+   <dependencies>
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
-            <version>12.6.1.jre11</version>
+            <version>12.8.1.jre11</version>
         </dependency>
     </dependencies>
 </project>
