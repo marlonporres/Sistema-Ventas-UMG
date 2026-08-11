@@ -81,8 +81,11 @@ public class EstudianteDAOImpl implements EstudianteDAO {
             ps.setString(4, estudiante.getNit());
             ps.setString(5, estudiante.getTelefono());
             ps.setInt(6, estudiante.getId());
+            
             ps.executeUpdate();
+            System.out.println(">>> ÉXITO: Estudiante ID " + estudiante.getId() + " actualizado.");
         } catch (Exception e) {
+            System.err.println(">>> ERROR AL ACTUALIZAR: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -93,8 +96,11 @@ public class EstudianteDAOImpl implements EstudianteDAO {
         try (Connection con = Conexion.getConexion();
              PreparedStatement ps = con.prepareStatement(sql)) {
             ps.setInt(1, id);
+            
             ps.executeUpdate();
+            System.out.println(">>> ÉXITO: Estudiante ID " + id + " eliminado.");
         } catch (Exception e) {
+            System.err.println(">>> ERROR AL ELIMINAR: " + e.getMessage());
             e.printStackTrace();
         }
     }

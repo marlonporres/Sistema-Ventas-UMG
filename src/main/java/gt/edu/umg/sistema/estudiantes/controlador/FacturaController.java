@@ -1,6 +1,7 @@
 package gt.edu.umg.sistema.estudiantes.controlador;
 
 import gt.edu.umg.sistema.estudiantes.dao.FacturaDAO;
+import gt.edu.umg.sistema.estudiantes.modelo.Factura;
 import gt.edu.umg.sistema.estudiantes.modelo.DetalleFactura;
 import gt.edu.umg.sistema.estudiantes.modelo.Producto;
 import gt.edu.umg.sistema.estudiantes.vista.FrmFactura;
@@ -29,7 +30,6 @@ public class FacturaController {
         if (this.vistaFactura.getBtnGuardar() != null) {
             this.vistaFactura.getBtnGuardar().addActionListener(e -> guardarFacturaEnBD());
         }
-        
     }
 
     private void agregarProductoATabla() {
@@ -103,26 +103,60 @@ public class FacturaController {
             return;
         }
 
-        if (vistaFactura.getTblDetalle().getRowCount() == 0) {
+        int totalFilas = vistaFactura.getTblDetalle().getRowCount();
+        if (totalFilas == 0) {
             JOptionPane.showMessageDialog(vistaFactura, "Debe agregar al menos un producto a la factura.");
             return;
         }
 
-        // --- INYECCIÓN DE DIAGNÓSTICO ---
-        System.out.println(">>> 1. Pasó las validaciones iniciales");
-        double total = obtenerTotalCalculado();
-        System.out.println(">>> 2. Total calculado: " + total);
+        // 1. Instanciamos el modelo maestro Factura y pasamos datos limpios
+        Factura factura = new Factura();
+        factura.setCliente(cliente);
+        factura.setNit(nit);
 
-        // Llamada al DAO de persistencia SQL Server
-        System.out.println(">>> 3. Intentando enviar al DAO...");
-        boolean guardado = facturaDAO.guardarFacturaPrueba(nit, cliente, total);
-        
-        System.out.println(">>> 4. Resultado del DAO: " + guardado);
-        // --------------------------------
+        double totalConIva = obtenerTotalCalculado();
+        double subtotalSinIva = totalConIva / 1.12;
+        double montoIva = totalConIva - subtotalSinIva;
 
-        if (guardado) {
-            limpiarFormularioCompleto();
+        factura.setSubtotal(subtotalSinIva);
+        factura.setIva(montoIva);
+        factura.setTotal(totalConIva);
+
+        // 2. Recorremos el JTable para rellenar la lista del detalle
+        for (int i = 0; i < totalFilas; i++) {
+            DetalleFactura det = new DetalleFactura();
+            
+            // Creamos el sub-objeto Producto requerido por tu lógica interna
+            Producto p = new Producto();
+            p.setIdProducto(Integer.parseInt(vistaFactura.getTblDetalle().getValueAt(i, 0).toString()));
+            p.setNombre(vistaFactura.getTblDetalle().getValueAt(i, 1).toString());
+            
+            String txtPrecio = vistaFactura.getTblDetalle().getValueAt(i, 3).toString().replace("Q", "").replace(",", "").trim();
+            p.setPrecio(Double.parseDouble(txtPrecio));
+            
+            det.setProducto(p);
+            det.setCantidad(Integer.parseInt(vistaFactura.getTblDetalle().getValueAt(i, 2).toString()));
+            det.setPrecioUnitario(p.getPrecio());
+            
+            String txtSubtotalProd = vistaFactura.getTblDetalle().getValueAt(i, 4).toString().replace("Q", "").replace(",", "").trim();
+            det.setSubtotal(Double.parseDouble(txtSubtotalProd));
+
+            // Agregamos el detalle al objeto contenedor Factura
+            factura.addDetalle(det);
         }
+
+        System.out.println(">>> Enviando factura relacional al DAO...");
+
+        // 3. Ejecución en segundo plano para evitar congelar la interfaz
+        new Thread(() -> {
+            boolean guardado = facturaDAO.guardarFacturaReal(factura);
+            
+            java.awt.EventQueue.invokeLater(() -> {
+                if (guardado) {
+                    limpiarFormularioCompleto();
+                }
+            });
+        }).start();
     }
 
     private void calcularTotales() {

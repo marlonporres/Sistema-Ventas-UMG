@@ -110,7 +110,6 @@ public class EstudianteController {
     }
 
     private void llenarTabla() {
-        // Ejecutamos la carga de datos en segundo plano para evitar lags al abrir o actualizar
         new Thread(() -> {
             List<Estudiante> lista = dao.listar();
             
@@ -118,7 +117,8 @@ public class EstudianteController {
                 DefaultTableModel modelo = (DefaultTableModel) vista.getTblEstudiantes().getModel();
                 modelo.setRowCount(0);
                 for (Estudiante e : lista) {
-                    modelo.addRow(new Object[]{e.getCarnet(), e.getNombre(), e.getEmail()});
+                    // CORRECCIÓN: Agregamos el ID como la primera columna para poder recuperarlo al hacer clic
+                    modelo.addRow(new Object[]{e.getId(), e.getCarnet(), e.getNombre(), e.getEmail()});
                 }
             });
         }).start();
@@ -127,15 +127,21 @@ public class EstudianteController {
     private void cargarFilaSeleccionada() {
         int fila = vista.getTblEstudiantes().getSelectedRow();
         if (fila >= 0) {
-            vista.getTxtCarnet().setText(vista.getTblEstudiantes().getValueAt(fila, 0).toString());
-            vista.getTxtNombre().setText(vista.getTblEstudiantes().getValueAt(fila, 1).toString());
-            vista.getTxtEmail().setText(vista.getTblEstudiantes().getValueAt(fila, 2).toString());
+            // CORRECCIÓN: Ahora que el ID está en la columna 0, lo cargamos en txtID
+            vista.getTxtID().setText(vista.getTblEstudiantes().getValueAt(fila, 0).toString());
+            vista.getTxtCarnet().setText(vista.getTblEstudiantes().getValueAt(fila, 1).toString());
+            vista.getTxtNombre().setText(vista.getTblEstudiantes().getValueAt(fila, 2).toString());
+            vista.getTxtEmail().setText(vista.getTblEstudiantes().getValueAt(fila, 3).toString());
+            
+            // Opcional: Si querés rellenar NIT y Teléfono al seleccionar, necesitarías traerlos de una lista indexada, 
+            // pero con el ID cargado en txtID basta para actualizar y eliminar.
         }
     }
 
     private Estudiante mapearDeVistaAModelo(boolean incluirId) {
         Estudiante est = new Estudiante();
-        if (incluirId && !vista.getTxtID().getText().isEmpty()) {
+        // CORRECCIÓN: Aseguramos limpiar espacios en blanco al parsear el ID
+        if (incluirId && !vista.getTxtID().getText().trim().isEmpty()) {
             est.setId(Integer.parseInt(vista.getTxtID().getText().trim()));
         }
         est.setCarnet(vista.getTxtCarnet().getText().trim());
