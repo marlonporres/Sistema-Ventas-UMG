@@ -1,0 +1,12 @@
+# Carpetas de compilación e intermedias de Maven
+/target/
+target/
+
+# Configuraciones locales de NetBeans e IDEs
+/nbproject/private/
+nb-configuration.xml
+.nb-gradle/
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
